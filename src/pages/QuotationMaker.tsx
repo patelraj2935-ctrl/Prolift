@@ -148,8 +148,7 @@ export default function QuotationMaker() {
     }
   };
 
-  // Render the PDF and show it in a preview modal FIRST — the user reviews it
-  // before downloading. Upload to Storage happens here too (when Firebase is on).
+  // Render the PDF, download it directly, and show it in a preview modal.
   const saveAndPdf = async () => {
     const q = (await save()) ?? existing;
     if (!q || !settings) return;
@@ -157,8 +156,13 @@ export default function QuotationMaker() {
     try {
       const blob = await renderPdfBlob(q, settings);
       const fileName = buildPdfFileName(q, settings);
+
+      // Trigger immediate browser download
+      downloadBlob(blob, fileName);
+
       if (preview) URL.revokeObjectURL(preview.url);
       setPreview({ url: URL.createObjectURL(blob), blob, fileName });
+
       if (isFirebaseConfigured) {
         try {
           const downloadUrl = await uploadPdf(blob, fileName);
@@ -167,6 +171,9 @@ export default function QuotationMaker() {
           console.warn('Firebase Storage upload skipped/not enabled:', err);
         }
       }
+    } catch (err) {
+      console.error('PDF Generation failed:', err);
+      alert('Could not generate PDF: ' + (err instanceof Error ? err.message : String(err)));
     } finally {
       setBusy('');
     }
@@ -349,11 +356,13 @@ export default function QuotationMaker() {
           </div>
 
           <div className="space-y-2">
+            {!customer && <div className="rounded-lg bg-amber-50 p-2 text-center text-xs font-semibold text-amber-700">⚠️ Select a Customer above to enable Save &amp; PDF</div>}
+            {customer && items.length === 0 && <div className="rounded-lg bg-amber-50 p-2 text-center text-xs font-semibold text-amber-700">⚠️ Add at least 1 product above to enable Save &amp; PDF</div>}
             <button className="btn-secondary w-full" disabled={!canSave} onClick={save}>
               <Save size={16} /> {busy === 'saving' ? 'Saving…' : 'Save Quotation'}
             </button>
             <button className="btn-primary w-full" disabled={!canSave} onClick={saveAndPdf}>
-              <FileDown size={16} /> {busy === 'pdf' ? 'Generating PDF…' : 'Save & Preview PDF'}
+              <FileDown size={16} /> {busy === 'pdf' ? 'Generating PDF…' : 'Save & Download PDF'}
             </button>
             <button className="btn-secondary w-full" onClick={() => navigate('/history')}>Go to History</button>
           </div>
