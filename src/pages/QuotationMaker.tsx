@@ -160,8 +160,12 @@ export default function QuotationMaker() {
       if (preview) URL.revokeObjectURL(preview.url);
       setPreview({ url: URL.createObjectURL(blob), blob, fileName });
       if (isFirebaseConfigured) {
-        const downloadUrl = await uploadPdf(blob, fileName);
-        await attachPdf(q.id, downloadUrl, fileName);
+        try {
+          const downloadUrl = await uploadPdf(blob, fileName);
+          await attachPdf(q.id, downloadUrl, fileName);
+        } catch (err) {
+          console.warn('Firebase Storage upload skipped/not enabled:', err);
+        }
       }
     } finally {
       setBusy('');
