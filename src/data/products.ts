@@ -4,7 +4,7 @@ import {
   collection, doc, addDoc, updateDoc, deleteDoc, getDocs, query, orderBy,
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../lib/firebase';
-import { lsGet, lsSet, genId } from '../lib/localdb';
+import { lsGet, lsSet, genId, seedProducts } from '../lib/localdb';
 import type { Product } from '../types';
 
 const COL = () => collection(db, 'products');
@@ -14,7 +14,19 @@ export async function listProducts(): Promise<Product[]> {
     // Preserve catalog (poster) order — seeded 1..16, then user additions appended.
     return lsGet<Product[]>('products', []);
   }
-  const snap = await getDocs(query(COL(), orderBy('createdAt')));
+  let snap = await getDocs(query(COL(), orderBy('createdAt')));
+  if (snap.empty) {
+    try {
+      await Promise.all(
+        seedProducts.map((p) =>
+          addDoc(COL(), { ...p, createdAt: Date.now(), updatedAt: Date.now() })
+        )
+      );
+      snap = await getDocs(query(COL(), orderBy('createdAt')));
+    } catch (err) {
+      console.warn('Auto-seeding Firestore products failed:', err);
+    }
+  }
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Product, 'id'>) }));
 }
 

@@ -4,7 +4,7 @@ import {
   collection, doc, addDoc, updateDoc, deleteDoc, getDocs, query, orderBy,
 } from 'firebase/firestore';
 import { db, isFirebaseConfigured } from '../lib/firebase';
-import { lsGet, lsSet, genId } from '../lib/localdb';
+import { lsGet, lsSet, genId, seedCustomers } from '../lib/localdb';
 import type { Customer } from '../types';
 
 const COL = () => collection(db, 'customers');
@@ -13,7 +13,19 @@ export async function listCustomers(): Promise<Customer[]> {
   if (!isFirebaseConfigured) {
     return lsGet<Customer[]>('customers', []).sort((a, b) => a.companyName.localeCompare(b.companyName));
   }
-  const snap = await getDocs(query(COL(), orderBy('companyName')));
+  let snap = await getDocs(query(COL(), orderBy('companyName')));
+  if (snap.empty) {
+    try {
+      await Promise.all(
+        seedCustomers.map((c) =>
+          addDoc(COL(), { ...c, createdAt: Date.now(), updatedAt: Date.now() })
+        )
+      );
+      snap = await getDocs(query(COL(), orderBy('companyName')));
+    } catch (err) {
+      console.warn('Auto-seeding Firestore customers failed:', err);
+    }
+  }
   return snap.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Customer, 'id'>) }));
 }
 
