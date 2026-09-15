@@ -14,7 +14,7 @@ const INK = '#111827';      // near-black text + borders
 const MUTE = '#6b7280';     // gray secondary text
 const BORDER = '#111827';   // thin black table lines (like the sample)
 const HEADFILL = '#f3f4f6'; // light-gray header row
-const MIN_ROWS = 4;         // small cushion only — no big block of empty lines
+const BLANK_ROWS = 2;       // always leave 2 blank lines at the end of the items table
 
 /** Shared fully-bordered table layout with tight padding. */
 const bordered = {
@@ -156,12 +156,10 @@ export function buildDocDefinition(
     ];
   });
 
-  // Pad short quotes with just a couple of blank rows for balance — but never the
-  // big block of empty lines we had before (only fill up to MIN_ROWS total).
-  const fillerRows: TableCell[][] = [];
-  for (let i = dataRows.length; i < MIN_ROWS; i++) {
-    fillerRows.push(Array.from({ length: 9 }, () => ({ text: ' ', style: 'td' })));
-  }
+  // Always leave exactly 2 blank rows after the items for balance / manual notes.
+  const fillerRows: TableCell[][] = Array.from({ length: BLANK_ROWS }, () =>
+    Array.from({ length: 9 }, () => ({ text: ' ', style: 'td' })),
+  );
 
   const itemsTable: Content = {
     table: {
