@@ -33,6 +33,15 @@ function resolveVfs(mod: unknown): Record<string, string> {
   return {};
 }
 
+// pdfmake 0.3.x reads fonts from an internal virtual filesystem (this.virtualfs),
+// NOT from a `.vfs` property — assigning `.vfs` is silently ignored and every
+// PDF then fails with "File 'Roboto-Medium.ttf' not found in virtual file
+// system". The fonts must be registered via addVirtualFileSystem().
+type PdfMake = typeof import('pdfmake/build/pdfmake') & {
+  addVirtualFileSystem: (vfs: Record<string, string>) => void;
+  vfs?: Record<string, string>;
+};
+
 let pdfMakePromise: ReturnType<typeof loadPdfMake> | null = null;
 async function loadPdfMake() {
   const [pdfMakeMod, fontsMod] = await Promise.all([
@@ -40,9 +49,14 @@ async function loadPdfMake() {
     import('pdfmake/build/vfs_fonts'),
   ]);
   const pdfMake = ((pdfMakeMod as { default?: unknown }).default ??
-    pdfMakeMod) as typeof import('pdfmake/build/pdfmake');
-  // Register the bundled Roboto fonts. Cast keeps TS happy across pdfmake type versions.
-  (pdfMake as unknown as { vfs: unknown }).vfs = resolveVfs(fontsMod);
+    pdfMakeMod) as PdfMake;
+  const vfs = resolveVfs(fontsMod);
+  // Register the bundled Roboto fonts into pdfmake's virtual filesystem.
+  if (typeof pdfMake.addVirtualFileSystem === 'function') {
+    pdfMake.addVirtualFileSystem(vfs);
+  } else {
+    pdfMake.vfs = vfs; // fallback for older pdfmake builds
+  }
   return pdfMake;
 }
 async function getPdfMake() {
