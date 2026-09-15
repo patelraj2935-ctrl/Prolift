@@ -143,6 +143,10 @@ export default function QuotationMaker() {
       setExisting(q);
       setSavedId(q.id);
       return q;
+    } catch (err) {
+      console.error('Save failed:', err);
+      alert('Could not save quotation: ' + (err instanceof Error ? err.message : String(err)));
+      return null;
     } finally {
       setBusy('');
     }

@@ -2,17 +2,30 @@
 // Renders a Quotation to a PDF Blob with pdfmake (pure JS, in-browser),
 // uploads it to Firebase Storage, and optionally downloads it.
 // ============================================================================
-import pdfMake from 'pdfmake/build/pdfmake';
-import pdfFonts from 'pdfmake/build/vfs_fonts';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage, isFirebaseConfigured } from '../lib/firebase';
 import type { CompanySettings, Quotation } from '../types';
 import { buildDocDefinition } from './pdfDoc';
 import { buildPdfFileName } from './filename';
 
-// Register the bundled Roboto fonts (vfs_fonts default export is the vfs map).
-// Cast keeps TS happy across pdfmake type versions.
-(pdfMake as unknown as { vfs: unknown }).vfs = pdfFonts as unknown;
+// pdfmake + its bundled fonts are ~large; load them on demand (only when a PDF
+// is actually generated) so they stay out of the main app bundle. Cached after
+// the first call.
+let pdfMakePromise: ReturnType<typeof loadPdfMake> | null = null;
+async function loadPdfMake() {
+  const [{ default: pdfMake }, { default: pdfFonts }] = await Promise.all([
+    import('pdfmake/build/pdfmake'),
+    import('pdfmake/build/vfs_fonts'),
+  ]);
+  // Register the bundled Roboto fonts (vfs_fonts default export is the vfs map).
+  // Cast keeps TS happy across pdfmake type versions.
+  (pdfMake as unknown as { vfs: unknown }).vfs = pdfFonts as unknown;
+  return pdfMake;
+}
+async function getPdfMake() {
+  if (!pdfMakePromise) pdfMakePromise = loadPdfMake();
+  return pdfMakePromise;
+}
 
 /** Best-effort: fetch an image URL and convert to a data URL for embedding. */
 async function toDataUrl(url?: string): Promise<string | undefined> {
@@ -33,6 +46,7 @@ async function toDataUrl(url?: string): Promise<string | undefined> {
 
 /** Build the PDF as a Blob. */
 export async function renderPdfBlob(q: Quotation, settings: CompanySettings): Promise<Blob> {
+  const pdfMake = await getPdfMake();
   const logoDataUrl = await toDataUrl(settings.logoUrl);
   const docDef = buildDocDefinition(q, settings, logoDataUrl);
   // pdfmake 0.3.x returns a Promise from getBlob(); the old callback form no
