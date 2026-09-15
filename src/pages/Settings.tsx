@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import type { CompanySettings } from '../types';
 import { getSettings, saveSettings, DEFAULT_SETTINGS } from '../data/settings';
-import { sanitize } from '../logic/validation';
+import { sanitize, toNumber, phoneError, emailError, gstinError } from '../logic/validation';
 
 export default function Settings() {
   const [form, setForm] = useState<CompanySettings>(DEFAULT_SETTINGS);
@@ -18,7 +18,10 @@ export default function Settings() {
   const addTerm = () => set('termsAndConditions', [...form.termsAndConditions, '']);
   const removeTerm = (i: number) => set('termsAndConditions', form.termsAndConditions.filter((_, idx) => idx !== i));
 
+  const settingsInvalid = !!(phoneError(form.phone) || emailError(form.email) || gstinError(form.gstin));
+
   const save = async () => {
+    if (settingsInvalid) return;
     setBusy(true);
     await saveSettings({ ...form, termsAndConditions: form.termsAndConditions.filter(Boolean) });
     setBusy(false);
@@ -37,7 +40,7 @@ export default function Settings() {
         </div>
         <div className="flex items-center gap-3">
           {saved && <span className="text-sm font-semibold text-green-600">Saved ✓</span>}
-          <button className="btn-primary" disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save Settings'}</button>
+          <button className="btn-primary" disabled={busy || settingsInvalid} onClick={save}>{busy ? 'Saving…' : 'Save Settings'}</button>
         </div>
       </div>
 
@@ -46,9 +49,9 @@ export default function Settings() {
           <h2 className="col-span-2 font-bold text-slate-700">Business Identity</h2>
           <Field label="Company Name" v={form.companyName} on={(v) => set('companyName', v)} />
           <Field label="Tagline" v={form.tagline} on={(v) => set('tagline', v)} />
-          <Field label="Phone" v={form.phone} on={(v) => set('phone', v)} />
-          <Field label="Email" v={form.email} on={(v) => set('email', v)} />
-          <Field label="GSTIN" v={form.gstin} on={(v) => set('gstin', sanitize.gstin(v))} />
+          <Field label="Phone" v={form.phone} on={(v) => set('phone', sanitize.phone(v))} error={phoneError(form.phone)} inputMode="numeric" />
+          <Field label="Email" v={form.email} on={(v) => set('email', v)} error={emailError(form.email)} />
+          <Field label="GSTIN" v={form.gstin} on={(v) => set('gstin', sanitize.gstin(v))} error={gstinError(form.gstin)} />
           <Field label="Logo URL" v={form.logoUrl} on={(v) => set('logoUrl', v)} />
           <Area label="Address" v={form.address} on={(v) => set('address', v)} span />
         </div>
@@ -85,7 +88,7 @@ export default function Settings() {
           <Field label="Quotation Prefix" v={form.quotationPrefix} on={(v) => set('quotationPrefix', v)} />
           <div>
             <label className="label">Number Pad Length</label>
-            <input className="input" type="number" value={form.quotationPadLength} onChange={(e) => set('quotationPadLength', Number(e.target.value))} />
+            <input className="input" inputMode="numeric" value={form.quotationPadLength} onChange={(e) => set('quotationPadLength', Math.min(10, Math.max(1, toNumber(sanitize.integer(e.target.value), 1))))} />
           </div>
           <Field label="PDF Filename Template" v={form.pdfFileNameTemplate} on={(v) => set('pdfFileNameTemplate', v)} />
           <p className="col-span-3 text-xs text-slate-400">Filename tokens: <code>{'{number}'}</code>, <code>{'{customer}'}</code>, <code>{'{date}'}</code>. Example: <code>PL-Q-000127-ABC-Industries.pdf</code></p>
@@ -95,11 +98,12 @@ export default function Settings() {
   );
 }
 
-function Field({ label, v, on, span }: { label: string; v: string; on: (v: string) => void; span?: boolean }) {
+function Field({ label, v, on, span, error, inputMode }: { label: string; v: string; on: (v: string) => void; span?: boolean; error?: string; inputMode?: 'numeric' | 'decimal' | 'text' }) {
   return (
     <div className={span ? 'col-span-2' : ''}>
       <label className="label">{label}</label>
-      <input className="input" value={v} onChange={(e) => on(e.target.value)} />
+      <input className="input" inputMode={inputMode} value={v} onChange={(e) => on(e.target.value)} />
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );
 }

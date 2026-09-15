@@ -110,7 +110,11 @@ function CustomerForm({ initial, onClose, onSaved }: { initial: Customer | null;
           <button onClick={onClose}><X size={20} className="text-slate-400" /></button>
         </div>
         <div className="grid grid-cols-2 gap-4 p-5">
-          <div className="col-span-2"><label className="label">Company Name *</label><input className="input" value={form.companyName} onChange={(e) => set('companyName', e.target.value)} /></div>
+          <div className="col-span-2">
+            <label className="label">Company Name *</label>
+            <input className="input" value={form.companyName} onChange={(e) => set('companyName', e.target.value)} />
+            {errors.companyName && <p className="mt-1 text-xs text-red-600">{errors.companyName}</p>}
+          </div>
           <div><label className="label">Contact Person</label><input className="input" value={form.contactPerson} onChange={(e) => set('contactPerson', e.target.value)} /></div>
           <div>
             <label className="label">Phone</label>

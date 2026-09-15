@@ -7,6 +7,7 @@ import {
 import { formatINR } from '../logic/calculations';
 import { ProductThumb } from '../components/ProductThumb';
 import { ImageCropper } from '../components/ImageCropper';
+import { productErrors, hasNoErrors, sanitize, toNumber } from '../logic/validation';
 
 const EMPTY: Omit<Product, 'id'> = {
   name: '', category: '', itemCode: '', capacity: '', hsn: '', unit: 'Nos',
@@ -106,6 +107,9 @@ function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; o
 
   const set = (k: keyof typeof form, v: string | number | Spec[]) => setForm((f) => ({ ...f, [k]: v }));
 
+  const errors = productErrors(form);
+  const canSave = hasNoErrors(errors) && !busy;
+
   const setSpec = (i: number, key: keyof Spec, v: string) => {
     const specs = [...form.specifications];
     specs[i] = { ...specs[i], [key]: v };
@@ -127,6 +131,7 @@ function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; o
   };
 
   const save = async () => {
+    if (!canSave) return;
     setBusy(true);
     const clean = { ...form, specifications: form.specifications.filter((s) => s.label || s.value) };
     if (initial) await updateProduct(initial.id, clean);
@@ -143,18 +148,35 @@ function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; o
           <button onClick={onClose}><X size={20} className="text-slate-400" /></button>
         </div>
         <div className="grid grid-cols-2 gap-4 p-5">
-          <div className="col-span-2"><label className="label">Product Name *</label><input className="input" value={form.name} onChange={(e) => set('name', e.target.value)} /></div>
+          <div className="col-span-2">
+            <label className="label">Product Name *</label>
+            <input className="input" value={form.name} onChange={(e) => set('name', e.target.value)} />
+            {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
+          </div>
           <div><label className="label">Category</label><input className="input" value={form.category} onChange={(e) => set('category', e.target.value)} /></div>
           <div><label className="label">Item Code / Model</label><input className="input" value={form.itemCode} onChange={(e) => set('itemCode', e.target.value)} /></div>
           <div><label className="label">Capacity</label><input className="input" placeholder="e.g. 2500 KG" value={form.capacity} onChange={(e) => set('capacity', e.target.value)} /></div>
-          <div><label className="label">HSN</label><input className="input" value={form.hsn} onChange={(e) => set('hsn', e.target.value)} /></div>
+          <div>
+            <label className="label">HSN</label>
+            <input className="input" inputMode="numeric" value={form.hsn} onChange={(e) => set('hsn', sanitize.digits(e.target.value))} />
+            {errors.hsn && <p className="mt-1 text-xs text-red-600">{errors.hsn}</p>}
+          </div>
           <div><label className="label">Unit</label><input className="input" value={form.unit} onChange={(e) => set('unit', e.target.value)} /></div>
-          <div><label className="label">GST Rate (%)</label><input className="input" type="number" value={form.gstRate} onChange={(e) => set('gstRate', Number(e.target.value))} /></div>
+          <div>
+            <label className="label">GST Rate (%)</label>
+            <input className="input" inputMode="decimal" value={form.gstRate} onChange={(e) => set('gstRate', toNumber(sanitize.decimal(e.target.value)))} />
+            {errors.gstRate && <p className="mt-1 text-xs text-red-600">{errors.gstRate}</p>}
+          </div>
           <div>
             <label className="label">Basic / Purchase Price <span className="text-red-500">(internal)</span></label>
-            <input className="input" type="number" value={form.basicPrice} onChange={(e) => set('basicPrice', Number(e.target.value))} />
+            <input className="input" inputMode="decimal" value={form.basicPrice} onChange={(e) => set('basicPrice', toNumber(sanitize.decimal(e.target.value)))} />
+            {errors.basicPrice && <p className="mt-1 text-xs text-red-600">{errors.basicPrice}</p>}
           </div>
-          <div><label className="label">Listing Price (customer)</label><input className="input" type="number" value={form.listingPrice} onChange={(e) => set('listingPrice', Number(e.target.value))} /></div>
+          <div>
+            <label className="label">Listing Price (customer)</label>
+            <input className="input" inputMode="decimal" value={form.listingPrice} onChange={(e) => set('listingPrice', toNumber(sanitize.decimal(e.target.value)))} />
+            {errors.listingPrice && <p className="mt-1 text-xs text-red-600">{errors.listingPrice}</p>}
+          </div>
           <div className="col-span-2"><label className="label">Description</label><textarea className="input" rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} /></div>
 
           <div className="col-span-2">
@@ -198,7 +220,7 @@ function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; o
         </div>
         <div className="flex justify-end gap-3 border-t p-4">
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" disabled={busy || !form.name} onClick={save}>{busy ? 'Saving…' : 'Save Product'}</button>
+          <button className="btn-primary" disabled={!canSave} onClick={save}>{busy ? 'Saving…' : 'Save Product'}</button>
         </div>
       </div>
 

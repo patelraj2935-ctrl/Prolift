@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { isFirebaseConfigured } from '../lib/firebase';
+import { emailError } from '../logic/validation';
 
 export default function Login() {
   const { login } = useAuth();
@@ -14,6 +15,9 @@ export default function Login() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    const emErr = emailError(email, true);
+    if (emErr) { setError(emErr); return; }
+    if (!password) { setError('Password is required.'); return; }
     setBusy(true);
     try {
       await login(email, password);

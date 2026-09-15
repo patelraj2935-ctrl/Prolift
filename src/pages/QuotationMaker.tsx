@@ -20,7 +20,7 @@ import { computeTotals, formatINR, formatNum } from '../logic/calculations';
 import { renderPdfBlob, downloadBlob, uploadPdf } from '../pdf/generatePdf';
 import { buildPdfFileName } from '../pdf/filename';
 import { isFirebaseConfigured } from '../lib/firebase';
-import { customerErrors, hasNoErrors, sanitize } from '../logic/validation';
+import { customerErrors, hasNoErrors, sanitize, toNumber } from '../logic/validation';
 
 function toSnapshot(c: Customer): CustomerSnapshot {
   return {
@@ -321,10 +321,10 @@ export default function QuotationMaker() {
                         </div>
                       </td>
                       <td className="table-td">
-                        <input className="input py-1" type="number" min={1} value={it.quantity} onChange={(e) => updateItem(i, { quantity: Number(e.target.value) })} />
+                        <input className="input py-1" inputMode="numeric" value={it.quantity} onChange={(e) => updateItem(i, { quantity: Math.max(1, toNumber(sanitize.integer(e.target.value), 1)) })} />
                       </td>
                       <td className="table-td">
-                        <input className="input py-1 text-right" type="number" value={it.rate} onChange={(e) => updateItem(i, { rate: Number(e.target.value) })} />
+                        <input className="input py-1 text-right" inputMode="decimal" value={it.rate} onChange={(e) => updateItem(i, { rate: toNumber(sanitize.decimal(e.target.value)) })} />
                       </td>
                       <td className="table-td text-right">{formatNum(it.rate * it.quantity)}</td>
                       <td className="table-td">
@@ -360,7 +360,7 @@ export default function QuotationMaker() {
                   <option value="percent">%</option>
                   <option value="amount">₹</option>
                 </select>
-                <input className="input" type="number" disabled={discountType === 'none'} value={discountValue} onChange={(e) => setDiscountValue(Number(e.target.value))} />
+                <input className="input" inputMode="decimal" disabled={discountType === 'none'} value={discountValue} onChange={(e) => setDiscountValue(toNumber(sanitize.decimal(e.target.value)))} />
               </div>
             </div>
 
