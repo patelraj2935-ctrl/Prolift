@@ -6,6 +6,7 @@ import {
 } from '../data/products';
 import { formatINR } from '../logic/calculations';
 import { ProductThumb } from '../components/ProductThumb';
+import { ImageCropper } from '../components/ImageCropper';
 
 const EMPTY: Omit<Product, 'id'> = {
   name: '', category: '', itemCode: '', capacity: '', hsn: '', unit: 'Nos',
@@ -100,6 +101,8 @@ export default function Products() {
 function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; onClose: () => void; onSaved: () => void }) {
   const [form, setForm] = useState<Omit<Product, 'id'>>(initial ?? EMPTY);
   const [busy, setBusy] = useState(false);
+  // Raw image awaiting crop (data URL). When set, the cropper modal is shown.
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
 
   const set = (k: keyof typeof form, v: string | number | Spec[]) => setForm((f) => ({ ...f, [k]: v }));
 
@@ -111,26 +114,16 @@ function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; o
   const addSpec = () => set('specifications', [...form.specifications, { label: '', value: '' }]);
   const removeSpec = (i: number) => set('specifications', form.specifications.filter((_, idx) => idx !== i));
 
-  // Read an uploaded image, downscale to <=500px, and store as a data URL so it
-  // works offline (demo mode) and embeds cleanly without bloating localStorage.
+  // Read the uploaded file into a data URL and open the cropper. The cropper
+  // outputs the final (cropped + downscaled) data URL, which we store — so it
+  // works offline (demo mode) and the hover preview shows exactly what was kept.
   const onPickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const max = 500;
-        const scale = Math.min(1, max / Math.max(img.width, img.height));
-        const canvas = document.createElement('canvas');
-        canvas.width = Math.round(img.width * scale);
-        canvas.height = Math.round(img.height * scale);
-        canvas.getContext('2d')?.drawImage(img, 0, 0, canvas.width, canvas.height);
-        set('imageUrl', canvas.toDataURL('image/jpeg', 0.8));
-      };
-      img.src = reader.result as string;
-    };
+    reader.onload = () => setCropSrc(reader.result as string);
     reader.readAsDataURL(file);
+    e.target.value = ''; // allow re-picking the same file later
   };
 
   const save = async () => {
@@ -174,11 +167,12 @@ function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; o
               )}
               <div className="flex-1 space-y-2">
                 <input className="input" placeholder="Paste image URL…" value={form.imageUrl ?? ''} onChange={(e) => set('imageUrl', e.target.value)} />
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <label className="btn-secondary cursor-pointer">
-                    Upload
+                    Upload &amp; Crop
                     <input type="file" accept="image/*" className="hidden" onChange={onPickImage} />
                   </label>
+                  {form.imageUrl && <button type="button" className="btn-secondary" onClick={() => setCropSrc(form.imageUrl!)}>Re-crop</button>}
                   {form.imageUrl && <button type="button" className="btn-secondary" onClick={() => set('imageUrl', '')}>Remove</button>}
                 </div>
               </div>
@@ -207,6 +201,14 @@ function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; o
           <button className="btn-primary" disabled={busy || !form.name} onClick={save}>{busy ? 'Saving…' : 'Save Product'}</button>
         </div>
       </div>
+
+      {cropSrc && (
+        <ImageCropper
+          src={cropSrc}
+          onCancel={() => setCropSrc(null)}
+          onCropped={(dataUrl) => { set('imageUrl', dataUrl); setCropSrc(null); }}
+        />
+      )}
     </div>
   );
 }
