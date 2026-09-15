@@ -34,7 +34,7 @@ export function ProductThumb({ src, name, size = 40 }: Props) {
         src={src}
         alt={name}
         style={{ height: size, width: size }}
-        className="flex-none cursor-zoom-in rounded border border-slate-200 object-cover"
+        className="flex-none cursor-zoom-in rounded border border-slate-200 bg-white object-contain"
         onMouseEnter={show}
         onMouseLeave={() => setPos(null)}
       />
@@ -43,7 +43,7 @@ export function ProductThumb({ src, name, size = 40 }: Props) {
           className="animate-fade-in pointer-events-none fixed z-[100] overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-black/5"
           style={{ left: pos.x, top: pos.y, width: POP_W }}
         >
-          <img src={src} alt={name} className="block h-60 w-full bg-white object-contain p-2" />
+          <img src={src} alt={name} className="block h-60 w-full bg-white object-contain p-4" />
           <div className="truncate px-2 py-1.5 text-center text-xs font-semibold text-slate-700">{name}</div>
         </div>,
         document.body,
