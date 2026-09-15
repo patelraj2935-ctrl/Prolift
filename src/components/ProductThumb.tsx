@@ -1,7 +1,9 @@
 // Small product thumbnail that, on hover, pops up the full image + name.
-// Uses a fixed-position popover (computed from the thumb's rect) so it never
-// gets clipped by scrollable/overflow containers like the line-items table.
+// The popover is fixed-positioned AND rendered in a portal to <body>, so it can
+// never be clipped by scrollable/overflow/transformed ancestors (e.g. the
+// line-items table or the overflow-hidden <main>).
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Props {
   src?: string;
@@ -36,14 +38,15 @@ export function ProductThumb({ src, name, size = 40 }: Props) {
         onMouseEnter={show}
         onMouseLeave={() => setPos(null)}
       />
-      {pos && (
+      {pos && createPortal(
         <div
           className="animate-fade-in pointer-events-none fixed z-[100] overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-black/5"
           style={{ left: pos.x, top: pos.y, width: POP_W }}
         >
           <img src={src} alt={name} className="block h-60 w-60 object-cover" />
           <div className="truncate px-2 py-1.5 text-center text-xs font-semibold text-slate-700">{name}</div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );

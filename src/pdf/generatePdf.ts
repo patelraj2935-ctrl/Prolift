@@ -11,15 +11,38 @@ import { buildPdfFileName } from './filename';
 // pdfmake + its bundled fonts are ~large; load them on demand (only when a PDF
 // is actually generated) so they stay out of the main app bundle. Cached after
 // the first call.
+/**
+ * The vfs_fonts module exports a flat map { "Roboto-Medium.ttf": <base64>, … }
+ * via CommonJS `module.exports = vfs`. Depending on the bundler's ESM interop,
+ * that map can arrive directly, under `.default`, or under the legacy
+ * `.pdfMake.vfs`. Unwrap whichever shape we get so pdfmake finds its fonts —
+ * otherwise it throws "File 'Roboto-Medium.ttf' not found in virtual file system".
+ */
+function resolveVfs(mod: unknown): Record<string, string> {
+  const candidates = [
+    (mod as { pdfMake?: { vfs?: unknown } })?.pdfMake?.vfs,
+    (mod as { vfs?: unknown })?.vfs,
+    (mod as { default?: unknown })?.default,
+    mod,
+  ];
+  for (const c of candidates) {
+    if (c && typeof c === 'object' && Object.keys(c as object).some((k) => k.endsWith('.ttf'))) {
+      return c as Record<string, string>;
+    }
+  }
+  return {};
+}
+
 let pdfMakePromise: ReturnType<typeof loadPdfMake> | null = null;
 async function loadPdfMake() {
-  const [{ default: pdfMake }, { default: pdfFonts }] = await Promise.all([
+  const [pdfMakeMod, fontsMod] = await Promise.all([
     import('pdfmake/build/pdfmake'),
     import('pdfmake/build/vfs_fonts'),
   ]);
-  // Register the bundled Roboto fonts (vfs_fonts default export is the vfs map).
-  // Cast keeps TS happy across pdfmake type versions.
-  (pdfMake as unknown as { vfs: unknown }).vfs = pdfFonts as unknown;
+  const pdfMake = ((pdfMakeMod as { default?: unknown }).default ??
+    pdfMakeMod) as typeof import('pdfmake/build/pdfmake');
+  // Register the bundled Roboto fonts. Cast keeps TS happy across pdfmake type versions.
+  (pdfMake as unknown as { vfs: unknown }).vfs = resolveVfs(fontsMod);
   return pdfMake;
 }
 async function getPdfMake() {
