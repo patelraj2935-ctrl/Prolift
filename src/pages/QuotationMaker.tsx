@@ -20,8 +20,9 @@ import { computeTotals, formatINR, formatNum } from '../logic/calculations';
 import { renderPdfBlob, downloadBlob, uploadPdf } from '../pdf/generatePdf';
 import { buildPdfFileName } from '../pdf/filename';
 import { isFirebaseConfigured } from '../lib/firebase';
-import { customerErrors, hasNoErrors, sanitize, toNumber } from '../logic/validation';
+import { customerErrors, hasNoErrors, sanitize } from '../logic/validation';
 import { lsGet, lsSet } from '../lib/localdb';
+import { MaskedInput, NumberInput } from '../components/inputs';
 
 // Auto-saved draft of an in-progress NEW quotation, so navigating away and back
 // doesn't lose typed data. Cleared once the quotation is saved.
@@ -262,7 +263,7 @@ export default function QuotationMaker() {
                     <input className="input col-span-2" placeholder="Company name *" value={newCust.companyName} onChange={(e) => setNewCust({ ...newCust, companyName: e.target.value })} autoFocus />
                     <input className="input" placeholder="Contact person" value={newCust.contactPerson} onChange={(e) => setNewCust({ ...newCust, contactPerson: e.target.value })} />
                     <div>
-                      <input className="input w-full" inputMode="numeric" placeholder="Phone (10-digit)" value={newCust.phone} onChange={(e) => setNewCust({ ...newCust, phone: sanitize.phone(e.target.value) })} />
+                      <MaskedInput className="input w-full" inputMode="numeric" placeholder="Phone (10-digit)" value={newCust.phone} sanitize={sanitize.phone} onValue={(v) => setNewCust({ ...newCust, phone: v })} />
                       {newCustErrors.phone && <p className="mt-1 text-xs text-red-600">{newCustErrors.phone}</p>}
                     </div>
                     <div>
@@ -270,14 +271,14 @@ export default function QuotationMaker() {
                       {newCustErrors.email && <p className="mt-1 text-xs text-red-600">{newCustErrors.email}</p>}
                     </div>
                     <div>
-                      <input className="input w-full uppercase" placeholder="GSTIN" value={newCust.gstin} onChange={(e) => setNewCust({ ...newCust, gstin: sanitize.gstin(e.target.value) })} />
+                      <MaskedInput className="input w-full uppercase" placeholder="GSTIN" value={newCust.gstin} sanitize={sanitize.gstin} onValue={(v) => setNewCust({ ...newCust, gstin: v })} />
                       {newCustErrors.gstin && <p className="mt-1 text-xs text-red-600">{newCustErrors.gstin}</p>}
                     </div>
                     <input className="input col-span-2" placeholder="Billing address" value={newCust.billingAddress} onChange={(e) => setNewCust({ ...newCust, billingAddress: e.target.value })} />
                     <input className="input" placeholder="City" value={newCust.city} onChange={(e) => setNewCust({ ...newCust, city: e.target.value })} />
                     <input className="input" placeholder="State" value={newCust.state} onChange={(e) => setNewCust({ ...newCust, state: e.target.value })} />
                     <div>
-                      <input className="input w-full" inputMode="numeric" placeholder="PIN Code (6-digit)" value={newCust.pincode} onChange={(e) => setNewCust({ ...newCust, pincode: sanitize.pincode(e.target.value) })} />
+                      <MaskedInput className="input w-full" inputMode="numeric" placeholder="PIN Code (6-digit)" value={newCust.pincode} sanitize={sanitize.pincode} onValue={(v) => setNewCust({ ...newCust, pincode: v })} />
                       {newCustErrors.pincode && <p className="mt-1 text-xs text-red-600">{newCustErrors.pincode}</p>}
                     </div>
                   </div>
@@ -366,10 +367,10 @@ export default function QuotationMaker() {
                         </div>
                       </td>
                       <td className="table-td">
-                        <input className="input py-1" inputMode="numeric" value={it.quantity} onChange={(e) => updateItem(i, { quantity: Math.max(1, toNumber(sanitize.integer(e.target.value), 1)) })} />
+                        <NumberInput className="input py-1" allowDecimal={false} min={1} value={it.quantity} onValue={(n) => updateItem(i, { quantity: Math.max(1, n) })} />
                       </td>
                       <td className="table-td">
-                        <input className="input py-1 text-right" inputMode="decimal" value={it.rate} onChange={(e) => updateItem(i, { rate: toNumber(sanitize.decimal(e.target.value)) })} />
+                        <NumberInput className="input py-1 text-right" min={0} value={it.rate} onValue={(n) => updateItem(i, { rate: n })} />
                       </td>
                       <td className="table-td text-right">{formatNum(it.rate * it.quantity)}</td>
                       <td className="table-td">
@@ -405,7 +406,7 @@ export default function QuotationMaker() {
                   <option value="percent">%</option>
                   <option value="amount">₹</option>
                 </select>
-                <input className="input" inputMode="decimal" disabled={discountType === 'none'} value={discountValue} onChange={(e) => setDiscountValue(toNumber(sanitize.decimal(e.target.value)))} />
+                <NumberInput className="input" min={0} disabled={discountType === 'none'} value={discountValue} onValue={setDiscountValue} />
               </div>
             </div>
 

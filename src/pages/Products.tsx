@@ -7,7 +7,8 @@ import {
 import { formatINR } from '../logic/calculations';
 import { ProductThumb } from '../components/ProductThumb';
 import { ImageCropper } from '../components/ImageCropper';
-import { productErrors, hasNoErrors, sanitize, toNumber } from '../logic/validation';
+import { productErrors, hasNoErrors, sanitize } from '../logic/validation';
+import { MaskedInput, NumberInput } from '../components/inputs';
 
 const EMPTY: Omit<Product, 'id'> = {
   name: '', category: '', itemCode: '', capacity: '', hsn: '', unit: 'Nos',
@@ -158,23 +159,23 @@ function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; o
           <div><label className="label">Capacity</label><input className="input" placeholder="e.g. 2500 KG" value={form.capacity} onChange={(e) => set('capacity', e.target.value)} /></div>
           <div>
             <label className="label">HSN</label>
-            <input className="input" inputMode="numeric" value={form.hsn} onChange={(e) => set('hsn', sanitize.digits(e.target.value))} />
+            <MaskedInput className="input" inputMode="numeric" value={form.hsn} sanitize={sanitize.digits} onValue={(v) => set('hsn', v)} />
             {errors.hsn && <p className="mt-1 text-xs text-red-600">{errors.hsn}</p>}
           </div>
           <div><label className="label">Unit</label><input className="input" value={form.unit} onChange={(e) => set('unit', e.target.value)} /></div>
           <div>
             <label className="label">GST Rate (%)</label>
-            <input className="input" inputMode="decimal" value={form.gstRate} onChange={(e) => set('gstRate', toNumber(sanitize.decimal(e.target.value)))} />
+            <NumberInput className="input" min={0} max={100} value={form.gstRate} onValue={(n) => set('gstRate', n)} />
             {errors.gstRate && <p className="mt-1 text-xs text-red-600">{errors.gstRate}</p>}
           </div>
           <div>
             <label className="label">Basic / Purchase Price <span className="text-red-500">(internal)</span></label>
-            <input className="input" inputMode="decimal" value={form.basicPrice} onChange={(e) => set('basicPrice', toNumber(sanitize.decimal(e.target.value)))} />
+            <NumberInput className="input" min={0} value={form.basicPrice} onValue={(n) => set('basicPrice', n)} />
             {errors.basicPrice && <p className="mt-1 text-xs text-red-600">{errors.basicPrice}</p>}
           </div>
           <div>
             <label className="label">Listing Price (customer)</label>
-            <input className="input" inputMode="decimal" value={form.listingPrice} onChange={(e) => set('listingPrice', toNumber(sanitize.decimal(e.target.value)))} />
+            <NumberInput className="input" min={0} value={form.listingPrice} onValue={(n) => set('listingPrice', n)} />
             {errors.listingPrice && <p className="mt-1 text-xs text-red-600">{errors.listingPrice}</p>}
           </div>
           <div className="col-span-2"><label className="label">Description</label><textarea className="input" rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} /></div>

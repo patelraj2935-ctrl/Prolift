@@ -5,6 +5,7 @@ import {
   listCustomers, createCustomer, updateCustomer, deleteCustomer, searchCustomers,
 } from '../data/customers';
 import { customerErrors, hasNoErrors, sanitize } from '../logic/validation';
+import { MaskedInput } from '../components/inputs';
 
 const EMPTY: Omit<Customer, 'id'> = {
   companyName: '', contactPerson: '', phone: '', email: '', gstin: '',
@@ -118,7 +119,7 @@ function CustomerForm({ initial, onClose, onSaved }: { initial: Customer | null;
           <div><label className="label">Contact Person</label><input className="input" value={form.contactPerson} onChange={(e) => set('contactPerson', e.target.value)} /></div>
           <div>
             <label className="label">Phone</label>
-            <input className="input" inputMode="numeric" placeholder="10-digit mobile" value={form.phone} onChange={(e) => set('phone', sanitize.phone(e.target.value))} />
+            <MaskedInput className="input" inputMode="numeric" placeholder="10-digit mobile" value={form.phone} sanitize={sanitize.phone} onValue={(v) => set('phone', v)} />
             {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
           </div>
           <div>
@@ -128,7 +129,7 @@ function CustomerForm({ initial, onClose, onSaved }: { initial: Customer | null;
           </div>
           <div>
             <label className="label">GSTIN</label>
-            <input className="input uppercase" placeholder="27ABCDE1234F1Z5" value={form.gstin} onChange={(e) => set('gstin', sanitize.gstin(e.target.value))} />
+            <MaskedInput className="input uppercase" placeholder="27ABCDE1234F1Z5" value={form.gstin} sanitize={sanitize.gstin} onValue={(v) => set('gstin', v)} />
             {errors.gstin && <p className="mt-1 text-xs text-red-600">{errors.gstin}</p>}
           </div>
           <div className="col-span-2"><label className="label">Billing Address</label><textarea className="input" rows={2} value={form.billingAddress} onChange={(e) => set('billingAddress', e.target.value)} /></div>
@@ -137,7 +138,7 @@ function CustomerForm({ initial, onClose, onSaved }: { initial: Customer | null;
           <div><label className="label">State</label><input className="input" value={form.state} onChange={(e) => set('state', e.target.value)} /></div>
           <div>
             <label className="label">PIN Code</label>
-            <input className="input" inputMode="numeric" placeholder="6-digit PIN" value={form.pincode} onChange={(e) => set('pincode', sanitize.pincode(e.target.value))} />
+            <MaskedInput className="input" inputMode="numeric" placeholder="6-digit PIN" value={form.pincode} sanitize={sanitize.pincode} onValue={(v) => set('pincode', v)} />
             {errors.pincode && <p className="mt-1 text-xs text-red-600">{errors.pincode}</p>}
           </div>
           <div className="col-span-2"><label className="label">Notes</label><textarea className="input" rows={2} value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>
