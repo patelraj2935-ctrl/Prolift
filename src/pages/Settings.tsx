@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { X } from 'lucide-react';
 import type { CompanySettings } from '../types';
 import { getSettings, saveSettings, DEFAULT_SETTINGS } from '../data/settings';
+import { sanitize } from '../logic/validation';
 
 export default function Settings() {
   const [form, setForm] = useState<CompanySettings>(DEFAULT_SETTINGS);
@@ -47,7 +48,7 @@ export default function Settings() {
           <Field label="Tagline" v={form.tagline} on={(v) => set('tagline', v)} />
           <Field label="Phone" v={form.phone} on={(v) => set('phone', v)} />
           <Field label="Email" v={form.email} on={(v) => set('email', v)} />
-          <Field label="GSTIN" v={form.gstin} on={(v) => set('gstin', v)} />
+          <Field label="GSTIN" v={form.gstin} on={(v) => set('gstin', sanitize.gstin(v))} />
           <Field label="Logo URL" v={form.logoUrl} on={(v) => set('logoUrl', v)} />
           <Area label="Address" v={form.address} on={(v) => set('address', v)} span />
         </div>

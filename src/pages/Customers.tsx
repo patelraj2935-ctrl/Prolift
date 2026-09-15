@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Plus, Pencil, Trash2, X } from 'lucide-react';
 import type { Customer } from '../types';
 import {
   listCustomers, createCustomer, updateCustomer, deleteCustomer, searchCustomers,
 } from '../data/customers';
+import { customerErrors, hasNoErrors, sanitize } from '../logic/validation';
 
 const EMPTY: Omit<Customer, 'id'> = {
   companyName: '', contactPerson: '', phone: '', email: '', gstin: '',
-  billingAddress: '', shippingAddress: '', city: '', state: '', notes: '',
+  billingAddress: '', shippingAddress: '', city: '', state: '', pincode: '', notes: '',
 };
 
 export default function Customers() {
@@ -85,11 +86,15 @@ export default function Customers() {
 }
 
 function CustomerForm({ initial, onClose, onSaved }: { initial: Customer | null; onClose: () => void; onSaved: () => void }) {
-  const [form, setForm] = useState<Omit<Customer, 'id'>>(initial ?? EMPTY);
+  const [form, setForm] = useState<Omit<Customer, 'id'>>(initial ? { ...EMPTY, ...initial } : EMPTY);
   const [busy, setBusy] = useState(false);
   const set = (k: keyof typeof form, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
+  const errors = useMemo(() => customerErrors(form), [form]);
+  const canSave = !!form.companyName.trim() && hasNoErrors(errors) && !busy;
+
   const save = async () => {
+    if (!canSave) return;
     setBusy(true);
     if (initial) await updateCustomer(initial.id, form);
     else await createCustomer(form);
@@ -107,18 +112,35 @@ function CustomerForm({ initial, onClose, onSaved }: { initial: Customer | null;
         <div className="grid grid-cols-2 gap-4 p-5">
           <div className="col-span-2"><label className="label">Company Name *</label><input className="input" value={form.companyName} onChange={(e) => set('companyName', e.target.value)} /></div>
           <div><label className="label">Contact Person</label><input className="input" value={form.contactPerson} onChange={(e) => set('contactPerson', e.target.value)} /></div>
-          <div><label className="label">Phone</label><input className="input" value={form.phone} onChange={(e) => set('phone', e.target.value)} /></div>
-          <div><label className="label">Email</label><input className="input" value={form.email} onChange={(e) => set('email', e.target.value)} /></div>
-          <div><label className="label">GSTIN</label><input className="input" value={form.gstin} onChange={(e) => set('gstin', e.target.value)} /></div>
+          <div>
+            <label className="label">Phone</label>
+            <input className="input" inputMode="numeric" placeholder="10-digit mobile" value={form.phone} onChange={(e) => set('phone', sanitize.phone(e.target.value))} />
+            {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
+          </div>
+          <div>
+            <label className="label">Email</label>
+            <input className="input" type="email" value={form.email} onChange={(e) => set('email', e.target.value)} />
+            {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
+          </div>
+          <div>
+            <label className="label">GSTIN</label>
+            <input className="input uppercase" placeholder="27ABCDE1234F1Z5" value={form.gstin} onChange={(e) => set('gstin', sanitize.gstin(e.target.value))} />
+            {errors.gstin && <p className="mt-1 text-xs text-red-600">{errors.gstin}</p>}
+          </div>
           <div className="col-span-2"><label className="label">Billing Address</label><textarea className="input" rows={2} value={form.billingAddress} onChange={(e) => set('billingAddress', e.target.value)} /></div>
           <div className="col-span-2"><label className="label">Shipping Address</label><textarea className="input" rows={2} value={form.shippingAddress} onChange={(e) => set('shippingAddress', e.target.value)} /></div>
           <div><label className="label">City</label><input className="input" value={form.city} onChange={(e) => set('city', e.target.value)} /></div>
           <div><label className="label">State</label><input className="input" value={form.state} onChange={(e) => set('state', e.target.value)} /></div>
+          <div>
+            <label className="label">PIN Code</label>
+            <input className="input" inputMode="numeric" placeholder="6-digit PIN" value={form.pincode} onChange={(e) => set('pincode', sanitize.pincode(e.target.value))} />
+            {errors.pincode && <p className="mt-1 text-xs text-red-600">{errors.pincode}</p>}
+          </div>
           <div className="col-span-2"><label className="label">Notes</label><textarea className="input" rows={2} value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>
         </div>
         <div className="flex justify-end gap-3 border-t p-4">
           <button className="btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn-primary" disabled={busy || !form.companyName} onClick={save}>{busy ? 'Saving…' : 'Save Customer'}</button>
+          <button className="btn-primary" disabled={!canSave} onClick={save}>{busy ? 'Saving…' : 'Save Customer'}</button>
         </div>
       </div>
     </div>

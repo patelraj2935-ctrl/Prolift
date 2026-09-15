@@ -86,7 +86,10 @@ export function buildDocDefinition(
   };
 
   // ---- Billing / Details / Shipping ----
-  const cityState = [q.customer.city, q.customer.state].filter(Boolean).join(', ');
+  const cityState = [
+    [q.customer.city, q.customer.state].filter(Boolean).join(', '),
+    q.customer.pincode ? `- ${q.customer.pincode}` : '',
+  ].filter(Boolean).join(' ');
   const billCell: TableCell = {
     stack: [
       { text: 'Billing Address:', style: 'metaLabel' },

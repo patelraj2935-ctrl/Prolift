@@ -39,6 +39,7 @@ export interface Customer {
   shippingAddress: string;
   city: string;
   state: string;
+  pincode: string;
   notes: string;
   createdAt?: number;
   updatedAt?: number;
@@ -77,6 +78,7 @@ export interface CustomerSnapshot {
   shippingAddress: string;
   city: string;
   state: string;
+  pincode: string;
 }
 
 /** Computed money totals for a quotation. */

@@ -20,18 +20,19 @@ import { computeTotals, formatINR, formatNum } from '../logic/calculations';
 import { renderPdfBlob, downloadBlob, uploadPdf } from '../pdf/generatePdf';
 import { buildPdfFileName } from '../pdf/filename';
 import { isFirebaseConfigured } from '../lib/firebase';
+import { customerErrors, hasNoErrors, sanitize } from '../logic/validation';
 
 function toSnapshot(c: Customer): CustomerSnapshot {
   return {
     customerId: c.id, companyName: c.companyName, contactPerson: c.contactPerson,
     phone: c.phone, email: c.email, gstin: c.gstin, billingAddress: c.billingAddress,
-    shippingAddress: c.shippingAddress, city: c.city, state: c.state,
+    shippingAddress: c.shippingAddress, city: c.city, state: c.state, pincode: c.pincode,
   };
 }
 
 const EMPTY_CUSTOMER: Omit<Customer, 'id'> = {
   companyName: '', contactPerson: '', phone: '', email: '', gstin: '',
-  billingAddress: '', shippingAddress: '', city: '', state: '', notes: '',
+  billingAddress: '', shippingAddress: '', city: '', state: '', pincode: '', notes: '',
 };
 
 function productToItem(p: Product): QuotationItem {
@@ -69,8 +70,11 @@ export default function QuotationMaker() {
   const [showNewCust, setShowNewCust] = useState(false);
   const [newCust, setNewCust] = useState<Omit<Customer, 'id'>>(EMPTY_CUSTOMER);
 
+  const newCustErrors = customerErrors(newCust);
+  const canSaveNewCust = !!newCust.companyName.trim() && hasNoErrors(newCustErrors);
+
   const saveNewCustomer = async () => {
-    if (!newCust.companyName.trim()) return;
+    if (!canSaveNewCust) return;
     const record = { ...newCust, shippingAddress: newCust.shippingAddress || newCust.billingAddress };
     const newId = await createCustomer(record);
     const full: Customer = { ...record, id: newId };
@@ -212,15 +216,28 @@ export default function QuotationMaker() {
                   <div className="grid grid-cols-2 gap-2">
                     <input className="input col-span-2" placeholder="Company name *" value={newCust.companyName} onChange={(e) => setNewCust({ ...newCust, companyName: e.target.value })} autoFocus />
                     <input className="input" placeholder="Contact person" value={newCust.contactPerson} onChange={(e) => setNewCust({ ...newCust, contactPerson: e.target.value })} />
-                    <input className="input" placeholder="Phone" value={newCust.phone} onChange={(e) => setNewCust({ ...newCust, phone: e.target.value })} />
-                    <input className="input" placeholder="Email" value={newCust.email} onChange={(e) => setNewCust({ ...newCust, email: e.target.value })} />
-                    <input className="input" placeholder="GSTIN" value={newCust.gstin} onChange={(e) => setNewCust({ ...newCust, gstin: e.target.value })} />
+                    <div>
+                      <input className="input w-full" inputMode="numeric" placeholder="Phone (10-digit)" value={newCust.phone} onChange={(e) => setNewCust({ ...newCust, phone: sanitize.phone(e.target.value) })} />
+                      {newCustErrors.phone && <p className="mt-1 text-xs text-red-600">{newCustErrors.phone}</p>}
+                    </div>
+                    <div>
+                      <input className="input w-full" type="email" placeholder="Email" value={newCust.email} onChange={(e) => setNewCust({ ...newCust, email: e.target.value })} />
+                      {newCustErrors.email && <p className="mt-1 text-xs text-red-600">{newCustErrors.email}</p>}
+                    </div>
+                    <div>
+                      <input className="input w-full uppercase" placeholder="GSTIN" value={newCust.gstin} onChange={(e) => setNewCust({ ...newCust, gstin: sanitize.gstin(e.target.value) })} />
+                      {newCustErrors.gstin && <p className="mt-1 text-xs text-red-600">{newCustErrors.gstin}</p>}
+                    </div>
                     <input className="input col-span-2" placeholder="Billing address" value={newCust.billingAddress} onChange={(e) => setNewCust({ ...newCust, billingAddress: e.target.value })} />
                     <input className="input" placeholder="City" value={newCust.city} onChange={(e) => setNewCust({ ...newCust, city: e.target.value })} />
                     <input className="input" placeholder="State" value={newCust.state} onChange={(e) => setNewCust({ ...newCust, state: e.target.value })} />
+                    <div>
+                      <input className="input w-full" inputMode="numeric" placeholder="PIN Code (6-digit)" value={newCust.pincode} onChange={(e) => setNewCust({ ...newCust, pincode: sanitize.pincode(e.target.value) })} />
+                      {newCustErrors.pincode && <p className="mt-1 text-xs text-red-600">{newCustErrors.pincode}</p>}
+                    </div>
                   </div>
                   <div className="flex gap-2">
-                    <button className="btn-primary" disabled={!newCust.companyName.trim()} onClick={saveNewCustomer}>Save &amp; Use</button>
+                    <button className="btn-primary" disabled={!canSaveNewCust} onClick={saveNewCustomer}>Save &amp; Use</button>
                     <button className="btn-secondary" onClick={() => { setShowNewCust(false); setNewCust(EMPTY_CUSTOMER); }}>Cancel</button>
                   </div>
                 </div>

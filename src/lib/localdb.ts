@@ -33,8 +33,8 @@ export const seedProducts: Omit<Product, 'id'>[] = [
 ];
 
 export const seedCustomers: Omit<Customer, 'id'>[] = [
-  { companyName: 'ABC Industries Pvt Ltd', contactPerson: 'Ramesh Shah', phone: '9876543210', email: 'purchase@abcindustries.in', gstin: '24ABCDE1234F1Z5', billingAddress: 'Plot 12, GIDC Estate, Phase 1', shippingAddress: 'Plot 12, GIDC Estate, Phase 1', city: 'Ahmedabad', state: 'Gujarat', notes: 'Regular customer.' },
-  { companyName: 'Shreeji Logistics', contactPerson: 'Nikhil Patel', phone: '9825012345', email: 'info@shreejilogistics.com', gstin: '24SHREE5678G1Z2', billingAddress: 'Warehouse 4, Ring Road', shippingAddress: 'Warehouse 4, Ring Road', city: 'Rajkot', state: 'Gujarat', notes: '' },
+  { companyName: 'ABC Industries Pvt Ltd', contactPerson: 'Ramesh Shah', phone: '9876543210', email: 'purchase@abcindustries.in', gstin: '24ABCDE1234F1Z5', billingAddress: 'Plot 12, GIDC Estate, Phase 1', shippingAddress: 'Plot 12, GIDC Estate, Phase 1', city: 'Ahmedabad', state: 'Gujarat', pincode: '380015', notes: 'Regular customer.' },
+  { companyName: 'Shreeji Logistics', contactPerson: 'Nikhil Patel', phone: '9825012345', email: 'info@shreejilogistics.com', gstin: '24SHREE5678G1Z2', billingAddress: 'Warehouse 4, Ring Road', shippingAddress: 'Warehouse 4, Ring Road', city: 'Rajkot', state: 'Gujarat', pincode: '360001', notes: '' },
 ];
 
 /** Populate demo data once, so the local review has products/customers ready. */

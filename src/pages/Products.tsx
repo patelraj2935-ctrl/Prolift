@@ -5,6 +5,7 @@ import {
   listProducts, createProduct, updateProduct, deleteProduct, searchProducts,
 } from '../data/products';
 import { formatINR } from '../logic/calculations';
+import { ProductThumb } from '../components/ProductThumb';
 
 const EMPTY: Omit<Product, 'id'> = {
   name: '', category: '', itemCode: '', capacity: '', hsn: '', unit: 'Nos',
@@ -64,7 +65,7 @@ export default function Products() {
               <tr key={p.id} className="hover:bg-slate-50">
                 <td className="table-td font-medium">
                   <div className="flex items-center gap-2">
-                    {p.imageUrl ? <img src={p.imageUrl} alt="" className="h-9 w-9 rounded object-cover" /> : null}
+                    <ProductThumb src={p.imageUrl} name={p.name} size={36} />
                     <div>{p.name}<div className="text-xs font-normal text-slate-400">{p.category}</div></div>
                   </div>
                 </td>
