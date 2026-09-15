@@ -21,6 +21,19 @@ import { renderPdfBlob, downloadBlob, uploadPdf } from '../pdf/generatePdf';
 import { buildPdfFileName } from '../pdf/filename';
 import { isFirebaseConfigured } from '../lib/firebase';
 import { customerErrors, hasNoErrors, sanitize, toNumber } from '../logic/validation';
+import { lsGet, lsSet } from '../lib/localdb';
+
+// Auto-saved draft of an in-progress NEW quotation, so navigating away and back
+// doesn't lose typed data. Cleared once the quotation is saved.
+const DRAFT_KEY = 'quotationDraft';
+type QuotationDraft = {
+  customer: CustomerSnapshot | null;
+  items: QuotationItem[];
+  poNumber: string;
+  poDate: string;
+  discountType: 'none' | 'percent' | 'amount';
+  discountValue: number;
+};
 
 function toSnapshot(c: Customer): CustomerSnapshot {
   return {
@@ -62,6 +75,8 @@ export default function QuotationMaker() {
   const [existing, setExisting] = useState<Quotation | null>(null);
   const [busy, setBusy] = useState<'' | 'saving' | 'pdf'>('');
   const [savedId, setSavedId] = useState<string | null>(null);
+  const [hydrated, setHydrated] = useState(false); // true once initial load/restore done
+  const [draftRestored, setDraftRestored] = useState(false);
 
   // PDF preview modal (shown after "Generate PDF", before downloading).
   const [preview, setPreview] = useState<{ url: string; blob: Blob; fileName: string } | null>(null);
@@ -99,9 +114,30 @@ export default function QuotationMaker() {
         setDiscountType(seed.discountType);
         setDiscountValue(seed.discountValue);
         if (source) { setPoNumber(seed.poNumber ?? ''); setPoDate(seed.poDate ? new Date(seed.poDate).toISOString().slice(0, 10) : ''); }
+      } else {
+        // Brand-new quotation: restore an auto-saved draft if one exists.
+        const draft = lsGet<QuotationDraft | null>(DRAFT_KEY, null);
+        if (draft && (draft.customer || draft.items?.length)) {
+          setCustomer(draft.customer);
+          setItems(draft.items ?? []);
+          setPoNumber(draft.poNumber ?? '');
+          setPoDate(draft.poDate ?? '');
+          setDiscountType(draft.discountType ?? 'none');
+          setDiscountValue(draft.discountValue ?? 0);
+          setDraftRestored(true);
+        }
       }
+      setHydrated(true);
     })();
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Auto-save the draft as the user edits a NEW (not-yet-saved) quotation.
+  useEffect(() => {
+    if (!hydrated || id || existing) return; // only for a fresh, unsaved quotation
+    lsSet<QuotationDraft>(DRAFT_KEY, { customer, items, poNumber, poDate, discountType, discountValue });
+  }, [hydrated, id, existing, customer, items, poNumber, poDate, discountType, discountValue]);
+
+  const clearDraft = () => { lsSet<QuotationDraft | null>(DRAFT_KEY, null); setDraftRestored(false); };
 
   const totals = useMemo(
     () => computeTotals({ items, discountType, discountValue }),
@@ -146,6 +182,8 @@ export default function QuotationMaker() {
       await saveQuotation(q);
       setExisting(q);
       setSavedId(q.id);
+      lsSet<QuotationDraft | null>(DRAFT_KEY, null); // saved — draft no longer needed
+      setDraftRestored(false);
       return q;
     } catch (err) {
       console.error('Save failed:', err);
@@ -203,6 +241,13 @@ export default function QuotationMaker() {
         </div>
         {savedId && <span className="rounded-full bg-green-100 px-3 py-1 text-xs font-semibold text-green-700">Saved</span>}
       </div>
+
+      {draftRestored && !savedId && (
+        <div className="mb-4 flex items-center justify-between rounded-lg bg-blue-50 px-3 py-2 text-xs font-medium text-blue-700">
+          <span>↩︎ Restored your unsaved draft.</span>
+          <button className="font-semibold underline" onClick={() => { clearDraft(); setCustomer(null); setItems([]); setPoNumber(''); setPoDate(''); setDiscountType('none'); setDiscountValue(0); }}>Start blank</button>
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-5">
         {/* LEFT: customer + products */}
