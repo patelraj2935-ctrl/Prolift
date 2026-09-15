@@ -43,7 +43,7 @@ export function ProductThumb({ src, name, size = 40 }: Props) {
           className="animate-fade-in pointer-events-none fixed z-[100] overflow-hidden rounded-lg bg-white shadow-2xl ring-1 ring-black/5"
           style={{ left: pos.x, top: pos.y, width: POP_W }}
         >
-          <img src={src} alt={name} className="block h-60 w-60 object-cover" />
+          <img src={src} alt={name} className="block h-60 w-full bg-white object-contain p-2" />
           <div className="truncate px-2 py-1.5 text-center text-xs font-semibold text-slate-700">{name}</div>
         </div>,
         document.body,
