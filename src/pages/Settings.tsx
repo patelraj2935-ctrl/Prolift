@@ -34,20 +34,20 @@ export default function Settings() {
 
   return (
     <div>
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Company Settings</h1>
           <p className="text-sm text-slate-500">These values appear on every quotation PDF.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 self-start sm:self-auto">
           {saved && <span className="text-sm font-semibold text-green-600">Saved ✓</span>}
           <button className="btn-primary" disabled={busy || settingsInvalid} onClick={save}>{busy ? 'Saving…' : 'Save Settings'}</button>
         </div>
       </div>
 
       <div className="space-y-5">
-        <div className="card grid grid-cols-2 gap-4">
-          <h2 className="col-span-2 font-bold text-slate-700">Business Identity</h2>
+        <div className="card grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <h2 className="sm:col-span-2 font-bold text-slate-700">Business Identity</h2>
           <Field label="Company Name" v={form.companyName} on={(v) => set('companyName', v)} />
           <Field label="Tagline" v={form.tagline} on={(v) => set('tagline', v)} />
           <Field label="Phone" v={form.phone} on={(v) => set('phone', v)} sanitize={sanitize.phone} error={phoneError(form.phone)} inputMode="numeric" />
@@ -57,8 +57,8 @@ export default function Settings() {
           <Area label="Address" v={form.address} on={(v) => set('address', v)} span />
         </div>
 
-        <div className="card grid grid-cols-2 gap-4">
-          <h2 className="col-span-2 font-bold text-slate-700">Terms &amp; Business Info</h2>
+        <div className="card grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <h2 className="sm:col-span-2 font-bold text-slate-700">Terms &amp; Business Info</h2>
           <Area label="Bank Details" v={form.bankDetails} on={(v) => set('bankDetails', v)} span />
           <Field label="Payment Terms" v={form.paymentTerms} on={(v) => set('paymentTerms', v)} />
           <Field label="Delivery Terms" v={form.deliveryTerms} on={(v) => set('deliveryTerms', v)} />
@@ -84,15 +84,15 @@ export default function Settings() {
           </div>
         </div>
 
-        <div className="card grid grid-cols-3 gap-4">
-          <h2 className="col-span-3 font-bold text-slate-700">Numbering &amp; File Names (configurable)</h2>
+        <div className="card grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <h2 className="sm:col-span-2 lg:col-span-3 font-bold text-slate-700">Numbering &amp; File Names (configurable)</h2>
           <Field label="Quotation Prefix" v={form.quotationPrefix} on={(v) => set('quotationPrefix', v)} />
           <div>
             <label className="label">Number Pad Length</label>
             <NumberInput className="input" allowDecimal={false} min={1} max={10} value={form.quotationPadLength} onValue={(n) => set('quotationPadLength', n)} />
           </div>
           <Field label="PDF Filename Template" v={form.pdfFileNameTemplate} on={(v) => set('pdfFileNameTemplate', v)} />
-          <p className="col-span-3 text-xs text-slate-400">Filename tokens: <code>{'{number}'}</code>, <code>{'{customer}'}</code>, <code>{'{date}'}</code>. Example: <code>PL-Q-000127-ABC-Industries.pdf</code></p>
+          <p className="sm:col-span-2 lg:col-span-3 text-xs text-slate-400">Filename tokens: <code>{'{number}'}</code>, <code>{'{customer}'}</code>, <code>{'{date}'}</code>. Example: <code>PL-Q-000127-ABC-Industries.pdf</code></p>
         </div>
       </div>
     </div>
@@ -101,7 +101,7 @@ export default function Settings() {
 
 function Field({ label, v, on, span, error, inputMode, sanitize }: { label: string; v: string; on: (v: string) => void; span?: boolean; error?: string; inputMode?: 'numeric' | 'decimal' | 'text'; sanitize?: (v: string) => string }) {
   return (
-    <div className={span ? 'col-span-2' : ''}>
+    <div className={span ? 'sm:col-span-2' : ''}>
       <label className="label">{label}</label>
       <input
         className="input"
@@ -119,7 +119,7 @@ function Field({ label, v, on, span, error, inputMode, sanitize }: { label: stri
 }
 function Area({ label, v, on, span }: { label: string; v: string; on: (v: string) => void; span?: boolean }) {
   return (
-    <div className={span ? 'col-span-2' : ''}>
+    <div className={span ? 'sm:col-span-2' : ''}>
       <label className="label">{label}</label>
       <textarea className="input" rows={2} value={v} onChange={(e) => on(e.target.value)} />
     </div>

@@ -38,12 +38,12 @@ export default function Products() {
 
   return (
     <div>
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Product Master</h1>
           <p className="text-sm text-slate-500">Add products once — they auto-fill on quotations.</p>
         </div>
-        <button className="btn-primary" onClick={() => setEditing('new')}><Plus size={16} /> Add Product</button>
+        <button className="btn-primary self-start sm:self-auto" onClick={() => setEditing('new')}><Plus size={16} /> Add Product</button>
       </div>
 
       <input className="input mb-4 max-w-md" placeholder="Search by name, code, capacity, category…" value={term} onChange={(e) => setTerm(e.target.value)} />
@@ -148,8 +148,8 @@ function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; o
           <h2 className="text-lg font-bold">{initial ? 'Edit Product' : 'Add Product'}</h2>
           <button onClick={onClose}><X size={20} className="text-slate-400" /></button>
         </div>
-        <div className="grid grid-cols-2 gap-4 p-5">
-          <div className="col-span-2">
+        <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
+          <div className="sm:col-span-2">
             <label className="label">Product Name *</label>
             <input className="input" value={form.name} onChange={(e) => set('name', e.target.value)} />
             {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
@@ -178,9 +178,9 @@ function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; o
             <NumberInput className="input" min={0} value={form.listingPrice} onValue={(n) => set('listingPrice', n)} />
             {errors.listingPrice && <p className="mt-1 text-xs text-red-600">{errors.listingPrice}</p>}
           </div>
-          <div className="col-span-2"><label className="label">Description</label><textarea className="input" rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} /></div>
+          <div className="sm:col-span-2"><label className="label">Description</label><textarea className="input" rows={2} value={form.description} onChange={(e) => set('description', e.target.value)} /></div>
 
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <label className="label">Product Image</label>
             <div className="flex items-center gap-3">
               {form.imageUrl ? (
@@ -202,7 +202,7 @@ function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; o
             </div>
           </div>
 
-          <div className="col-span-2">
+          <div className="sm:col-span-2">
             <div className="mb-2 flex items-center justify-between">
               <label className="label mb-0">Product Specifications</label>
               <button type="button" className="text-sm font-semibold text-brand-600" onClick={addSpec}>+ Add spec</button>
@@ -210,10 +210,12 @@ function ProductForm({ initial, onClose, onSaved }: { initial: Product | null; o
             {form.specifications.length === 0 && <p className="text-xs text-slate-400">No specs added. Each product can have its own specs.</p>}
             <div className="space-y-2">
               {form.specifications.map((s, i) => (
-                <div key={i} className="flex gap-2">
+                <div key={i} className="flex flex-col gap-2 sm:flex-row sm:items-center">
                   <input className="input" placeholder="Label (e.g. Fork Length)" value={s.label} onChange={(e) => setSpec(i, 'label', e.target.value)} />
-                  <input className="input" placeholder="Value (e.g. 1150 mm)" value={s.value} onChange={(e) => setSpec(i, 'value', e.target.value)} />
-                  <button type="button" onClick={() => removeSpec(i)} className="text-slate-400 hover:text-red-500"><X size={18} /></button>
+                  <div className="flex gap-2">
+                    <input className="input flex-1" placeholder="Value (e.g. 1150 mm)" value={s.value} onChange={(e) => setSpec(i, 'value', e.target.value)} />
+                    <button type="button" onClick={() => removeSpec(i)} className="shrink-0 text-slate-400 hover:text-red-500"><X size={18} /></button>
+                  </div>
                 </div>
               ))}
             </div>

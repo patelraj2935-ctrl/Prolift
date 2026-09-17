@@ -31,12 +31,12 @@ export default function Customers() {
 
   return (
     <div>
-      <div className="mb-5 flex items-center justify-between">
+      <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-800">Customer Master</h1>
           <p className="text-sm text-slate-500">Add customers once — they auto-fill on quotations.</p>
         </div>
-        <button className="btn-primary" onClick={() => setEditing('new')}><Plus size={16} /> Add Customer</button>
+        <button className="btn-primary self-start sm:self-auto" onClick={() => setEditing('new')}><Plus size={16} /> Add Customer</button>
       </div>
 
       <input className="input mb-4 max-w-md" placeholder="Search by company, contact, phone, city, GSTIN…" value={term} onChange={(e) => setTerm(e.target.value)} />
@@ -110,8 +110,8 @@ function CustomerForm({ initial, onClose, onSaved }: { initial: Customer | null;
           <h2 className="text-lg font-bold">{initial ? 'Edit Customer' : 'Add Customer'}</h2>
           <button onClick={onClose}><X size={20} className="text-slate-400" /></button>
         </div>
-        <div className="grid grid-cols-2 gap-4 p-5">
-          <div className="col-span-2">
+        <div className="grid grid-cols-1 gap-4 p-5 sm:grid-cols-2">
+          <div className="sm:col-span-2">
             <label className="label">Company Name *</label>
             <input className="input" value={form.companyName} onChange={(e) => set('companyName', e.target.value)} />
             {errors.companyName && <p className="mt-1 text-xs text-red-600">{errors.companyName}</p>}
@@ -132,8 +132,8 @@ function CustomerForm({ initial, onClose, onSaved }: { initial: Customer | null;
             <MaskedInput className="input uppercase" placeholder="27ABCDE1234F1Z5" value={form.gstin} sanitize={sanitize.gstin} onValue={(v) => set('gstin', v)} />
             {errors.gstin && <p className="mt-1 text-xs text-red-600">{errors.gstin}</p>}
           </div>
-          <div className="col-span-2"><label className="label">Billing Address</label><textarea className="input" rows={2} value={form.billingAddress} onChange={(e) => set('billingAddress', e.target.value)} /></div>
-          <div className="col-span-2"><label className="label">Shipping Address</label><textarea className="input" rows={2} value={form.shippingAddress} onChange={(e) => set('shippingAddress', e.target.value)} /></div>
+          <div className="sm:col-span-2"><label className="label">Billing Address</label><textarea className="input" rows={2} value={form.billingAddress} onChange={(e) => set('billingAddress', e.target.value)} /></div>
+          <div className="sm:col-span-2"><label className="label">Shipping Address</label><textarea className="input" rows={2} value={form.shippingAddress} onChange={(e) => set('shippingAddress', e.target.value)} /></div>
           <div><label className="label">City</label><input className="input" value={form.city} onChange={(e) => set('city', e.target.value)} /></div>
           <div><label className="label">State</label><input className="input" value={form.state} onChange={(e) => set('state', e.target.value)} /></div>
           <div>
@@ -141,7 +141,7 @@ function CustomerForm({ initial, onClose, onSaved }: { initial: Customer | null;
             <MaskedInput className="input" inputMode="numeric" placeholder="6-digit PIN" value={form.pincode} sanitize={sanitize.pincode} onValue={(v) => set('pincode', v)} />
             {errors.pincode && <p className="mt-1 text-xs text-red-600">{errors.pincode}</p>}
           </div>
-          <div className="col-span-2"><label className="label">Notes</label><textarea className="input" rows={2} value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>
+          <div className="sm:col-span-2"><label className="label">Notes</label><textarea className="input" rows={2} value={form.notes} onChange={(e) => set('notes', e.target.value)} /></div>
         </div>
         <div className="flex justify-end gap-3 border-t p-4">
           <button className="btn-secondary" onClick={onClose}>Cancel</button>

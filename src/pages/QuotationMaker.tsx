@@ -250,17 +250,17 @@ export default function QuotationMaker() {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
         {/* LEFT: customer + products */}
-        <div className="col-span-2 space-y-5">
+        <div className="space-y-5 lg:col-span-2">
           {/* Customer */}
           <div className="card">
             <label className="label">Customer</label>
             {!customer ? (
               showNewCust ? (
                 <div className="space-y-2">
-                  <div className="grid grid-cols-2 gap-2">
-                    <input className="input col-span-2" placeholder="Company name *" value={newCust.companyName} onChange={(e) => setNewCust({ ...newCust, companyName: e.target.value })} autoFocus />
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <input className="input sm:col-span-2" placeholder="Company name *" value={newCust.companyName} onChange={(e) => setNewCust({ ...newCust, companyName: e.target.value })} autoFocus />
                     <input className="input" placeholder="Contact person" value={newCust.contactPerson} onChange={(e) => setNewCust({ ...newCust, contactPerson: e.target.value })} />
                     <div>
                       <MaskedInput className="input w-full" inputMode="numeric" placeholder="Phone (10-digit)" value={newCust.phone} sanitize={sanitize.phone} onValue={(v) => setNewCust({ ...newCust, phone: v })} />
@@ -274,7 +274,7 @@ export default function QuotationMaker() {
                       <MaskedInput className="input w-full uppercase" placeholder="GSTIN" value={newCust.gstin} sanitize={sanitize.gstin} onValue={(v) => setNewCust({ ...newCust, gstin: v })} />
                       {newCustErrors.gstin && <p className="mt-1 text-xs text-red-600">{newCustErrors.gstin}</p>}
                     </div>
-                    <input className="input col-span-2" placeholder="Billing address" value={newCust.billingAddress} onChange={(e) => setNewCust({ ...newCust, billingAddress: e.target.value })} />
+                    <input className="input sm:col-span-2" placeholder="Billing address" value={newCust.billingAddress} onChange={(e) => setNewCust({ ...newCust, billingAddress: e.target.value })} />
                     <input className="input" placeholder="City" value={newCust.city} onChange={(e) => setNewCust({ ...newCust, city: e.target.value })} />
                     <input className="input" placeholder="State" value={newCust.state} onChange={(e) => setNewCust({ ...newCust, state: e.target.value })} />
                     <div>
